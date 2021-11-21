@@ -113,7 +113,7 @@ const viewDeparts = () => {
         console.table(results);
     })
 }
-
+//add employee
 const addEmployee = () => {
     inquirer.prompt([
         {
@@ -128,6 +128,61 @@ const addEmployee = () => {
                     return false;
                 }
             }
+        },
+        {
+            type: 'input',
+            name: 'lastName', 
+            message: 'What is the employees last name?',
+            validate: addLastName => {
+                if (addLastName) {
+                    return true;
+                } else {
+                    console.log('Please enter their last name');
+                    return false;
+                }
+            }
         }
     ])
+    .then(answer => {
+        const newEmp = [answer.firstName, answer.lastName]
+        const newEmpRole = `Select role.id, role.title FROM role`;
+        db.promise().query(newEmpRole, (err, data) => {
+            if (error) throw error;
+            const roles = data.map(({ id, title }) => ({name: title, value: id }));
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'role',
+                    message: "what is the employee's role?",
+                    choices: roles
+                }
+            ])
+            .then(rChoice => {
+                const role = rChoice.roles;
+                newEmp.push(role);
+                const managerId  = `SELECT * FROM employee`;
+                db.promise().query(managerId, (err, data) => {
+                    if(err) throw error;
+                    const managers = data.map(({ id, first_name, last_name }) => ({ name: first_name + " "+ last_name, value: id }));
+                    inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'manager',
+                            message: "who is the employee's manager",
+                            choices: managers
+                        }
+                    ])
+                        .then(managerChoice => {
+                            const manager = managerChoice.manager;
+                            crit.push(manager);
+                            const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                            db.query(sql, crit, (err) => {
+                                if (err) throw error;
+                                console.log('Employee has been added!');
+                            })
+                        })
+                })
+            })
+        })
+    })
 }
