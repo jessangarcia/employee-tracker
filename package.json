@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jests"
+    "test": "jests",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,6 @@
     "figlet": "^1.4.0",
     "inquirer": "^7.1.0",
     "mysql2": "^2.1.0",
-    "nodemon": "^2.0.4",
     "validator": "^13.0.0"
   }
 }
