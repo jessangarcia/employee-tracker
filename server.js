@@ -86,15 +86,18 @@ const userPrompt = () => {
 };
 //view all employees
 const viewEmployees = () => {
-    var sql = `SELECT employees.id, employees.first_name, employees.last_name, 
-    role.title AS Title, departments.name AS Department, role.salary AS Salary, 
-    CONCAT(e.first_name, ' ' ,e.last_name) AS Manager
-    FROM employees 
-    LEFT JOIN role ON employees.role_id = role.id
-    LEFT JOIN departments ON role.departments_id = departments.id
-    LEFT JOIN employees e ON employees.manager_id = e.id;`;
-    db.query(sql, (err, results) => {
-        if (err) throw error;
+    var sql = `SELECT employee.id, 
+    employee.first_name, 
+    employee.last_name, 
+    roles.title, 
+    department.department_name AS 'department', 
+    roles.salary
+    FROM employee, roles, department 
+    WHERE department.id = roles.department_id 
+    AND roles.id = employee.role_id
+    ORDER BY employee.id ASC`;
+    db.query(sql, (error, results) => {
+        if (error) throw error;
         console.log(``);
         console.log(`Current Employees:`);
         console.table(results);
@@ -102,13 +105,11 @@ const viewEmployees = () => {
 };
 //view all roles
 const viewRoles = () => {
-    const sql = `SELECT role.id, role.title, role.salary, departments.name
-    AS department_name 
-    FROM role 
-    LEFT JOIN departments 
-    ON role.departments_id = departments.id;`;
-    db.query(sql, (err, results) => {
-        if (err) throw error;
+    const sql = `SELECT roles.id, roles.title, department.department_name AS department
+    FROM roles
+    INNER JOIN department ON roles.department_id = department.id`;
+    db.query(sql, (error, results) => {
+        if (error) throw error;
         console.log(``);
         console.log(`Current Roles:`);
         console.table(results);
@@ -116,9 +117,9 @@ const viewRoles = () => {
 }
 //view all departments 
 const viewDeparts = () => {
-    var sql = `SELECT department.id AS id, department.name AS department FROM department`;
-    db.query(sql, (err, results) => {
-        if (err) throw error;
+    var sql = `SELECT department.id AS id, department.department_name AS department FROM department`;
+    db.query(sql, (error, results) => {
+        if (error) throw error;
         console.log(``);
         console.log(`Department List:`);
         console.table(results);
@@ -157,7 +158,7 @@ const addEmployee = () => {
         .then(answer => {
             const newEmp = [answer.firstName, answer.lastName]
             const newEmpRole = `Select role.id, role.title FROM role`;
-            db.promise().query(newEmpRole, (err, data) => {
+            db.promise().query(newEmpRole, (error, data) => {
                 if (error) throw error;
                 const roles = data.map(({ id, title }) => ({ name: title, value: id }));
                 inquirer.prompt([
@@ -172,8 +173,8 @@ const addEmployee = () => {
                         const role = rChoice.roles;
                         newEmp.push(role);
                         const managerId = `SELECT * FROM employee`;
-                        db.promise().query(managerId, (err, data) => {
-                            if (err) throw error;
+                        db.promise().query(managerId, (error, data) => {
+                            if (error) throw error;
                             const managers = data.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
                             inquirer.prompt([
                                 {
@@ -187,8 +188,8 @@ const addEmployee = () => {
                                     const manager = managerChoice.manager;
                                     crit.push(manager);
                                     const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-                                    db.query(sql, crit, (err) => {
-                                        if (err) throw error;
+                                    db.query(sql, crit, (error) => {
+                                        if (error) throw error;
                                         console.log('Employee has been added!');
                                     })
                                 })
