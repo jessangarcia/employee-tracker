@@ -36,4 +36,79 @@ const userPrompt = () => {
             ]
         }
     ])
+        .then((answers) => {
+            const { choices } = answers;
+
+            if (choices === 'View All Employees') {
+                viewEmployees();
+            }
+
+            if (choices === 'View All Roles') {
+                viewRoles();
+            }
+
+            if (choices === 'View All Departments') {
+                viewDeparts();
+            }
+
+            if (choices === 'Add Employee') {
+                addEmployee();
+            }
+
+            if (choices === 'Add Role') {
+                addRole();
+            }
+
+            if (choices === 'Add Department') {
+                addDepart();
+            }
+
+            if (choices === 'Update An Employee Role') {
+                updateEmpRole();
+            }
+
+            if (choices === 'Exit') {
+                db.end();
+            }
+        })
+};
+
+const viewEmployees = () => {
+    var sql = `SELECT employees.id, employees.first_name, employees.last_name, 
+    role.title AS Title, departments.name AS Department, role.salary AS Salary, 
+    CONCAT(e.first_name, ' ' ,e.last_name) AS Manager
+    FROM employees 
+    LEFT JOIN role ON employees.role_id = role.id
+    LEFT JOIN departments ON role.departments_id = departments.id
+    LEFT JOIN employees e ON employees.manager_id = e.id;`;
+    db.query(sql, (err, results) => {
+        if (err) throw error;
+        console.log(``);
+        console.log(`Current Employees:`);
+        console.table(results);
+    })
+};
+
+const viewRoles = () => {
+    const sql = `SELECT role.id, role.title, role.salary, departments.name
+    AS department_name 
+    FROM role 
+    LEFT JOIN departments 
+    ON role.departments_id = departments.id;`;
+    db.query(sql, (err, results) => {
+        if (err) throw error;
+        console.log(``);
+        console.log(`Current Roles:`);
+        console.table(results);
+    })
+}
+
+const viewDeparts = () => {
+    var sql = `ELECT department.id AS id, department.name AS department FROM department`;
+    db.query(sql, (err, results) => {
+        if (err) throw error;
+        console.log(``);
+        console.log(`Department List:`);
+        console.table(results);
+    })
 }
