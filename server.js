@@ -82,7 +82,7 @@ const userPrompt = () => {
             if (choices === 'Exit') {
                 db.end();
             }
-        })
+        });
 };
 //view all employees
 const viewEmployees = () => {
@@ -101,7 +101,7 @@ const viewEmployees = () => {
         console.log(``);
         console.log(`Current Employees:`);
         console.table(results);
-    })
+    });
 };
 //view all roles
 const viewRoles = () => {
@@ -113,8 +113,8 @@ const viewRoles = () => {
         console.log(``);
         console.log(`Current Roles:`);
         console.table(results);
-    })
-}
+    });
+};
 //view all departments 
 const viewDeparts = () => {
     var sql = `SELECT department.id AS id, department.department_name AS department FROM department`;
@@ -123,6 +123,91 @@ const viewDeparts = () => {
         console.log(``);
         console.log(`Department List:`);
         console.table(results);
+    });
+};
+
+//add department
+const addDepart = () => {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'newDepart',
+            message: 'What is the new department name?',
+            validate: inputDepart => {
+                if (inputDepart) {
+                    return true;
+                } else {
+                    console.log('Please enter department name');
+                    return false;
+                }
+            }
+        }
+    ])
+        .then((answer) => {
+            var depart = `INSERT INTO department (department_name) VALUES (?)`;
+            db.query(depart, answer.newDepart, (error, response) => {
+                if (error) throw error;
+                console.log(``);
+                console.log(chalk.greenBright(answer.newDepart + ` Department created!`));
+                console.log(``);
+                viewDeparts();
+            })
+        })
+};
+
+//add role 
+const addRole = () => {
+    const sqlDepart = `SELECT * FROM department`
+    db.query(sqlDepart, (error, response) => {
+        if (error) throw error;
+        let departArray = [];
+        response.forEach((department) => { departArray.push(department.department_name); });
+        departArray.push('Create Department');
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'departName',
+                choices: departArray
+            }
+        ])
+            .then((answer) => {
+                if (answer.departName === 'Create Department') {
+                    this.addDepart();
+                } else {
+                    newRole(answer);
+                }
+            });
+        const newRole = (departInfo) => {
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'roleTitle',
+                    message: 'WHat is the name of this role?'
+                },
+                {
+                    type: 'input',
+                    name: 'salary',
+                    message: 'What is the salary of this role?'
+                }
+            ])
+                .then((answer) => {
+                    let roleInfo = answer.roleTitle;
+                    let departId;
+
+                    response.forEach((department) => {
+                        if (departInfo.departName === department.department_name) {departId = department.id;}
+                    });
+
+                    let sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`;
+                    let newRoles = [roleInfo, answer.salary, departId];
+
+                    db.query(sql, newRoles, (error) => {
+                        if (error) throw error;
+                        console.log(chalk.greenBright(`Role created!`));
+                        viewRoles();
+                    })
+                })
+        }
     })
 }
 //add employee
@@ -157,14 +242,14 @@ const addEmployee = () => {
     ])
         .then(answer => {
             const newEmp = [answer.firstName, answer.lastName]
-            const newEmpRole = `Select role.id, role.title FROM role`;
-            db.promise().query(newEmpRole, (error, data) => {
+            const newEmpRole = `SELECT roles.id, roles.title FROM roles`;
+            db.query(newEmpRole, (error, data) => {
                 if (error) throw error;
                 const roles = data.map(({ id, title }) => ({ name: title, value: id }));
                 inquirer.prompt([
                     {
                         type: 'list',
-                        name: 'role',
+                        name: 'roles',
                         message: "what is the employee's role?",
                         choices: roles
                     }
@@ -173,7 +258,7 @@ const addEmployee = () => {
                         const role = rChoice.roles;
                         newEmp.push(role);
                         const managerId = `SELECT * FROM employee`;
-                        db.promise().query(managerId, (error, data) => {
+                        db.query(managerId, (error, data) => {
                             if (error) throw error;
                             const managers = data.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
                             inquirer.prompt([
@@ -186,15 +271,16 @@ const addEmployee = () => {
                             ])
                                 .then(managerChoice => {
                                     const manager = managerChoice.manager;
-                                    crit.push(manager);
+                                    newEmp.push(manager);
                                     const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-                                    db.query(sql, crit, (error) => {
+                                    db.query(sql, newEmp, (error) => {
                                         if (error) throw error;
-                                        console.log('Employee has been added!');
-                                    })
-                                })
-                        })
-                    })
-            })
-        })
-}
+                                        console.log(chalk.greenBright(`Employee has been added!`));
+                                        viewEmployees();
+                                    });
+                                });
+                        });
+                    });
+            });
+        });
+};
