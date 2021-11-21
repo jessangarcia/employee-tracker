@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 require('dotenv').config();
 const mysql = require('mysql2');
-const cTable = require('console.table')
 const chalk = require('chalk')
 const figlet = require('figlet');
 
