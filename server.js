@@ -7,6 +7,7 @@ const validate = require('./utils/inputValidate')
 const figlet = require('figlet');
 const inquirer = require('inquirer');
 
+//connect to database 
 db.connect((error) => {
     if (error) throw error;
     console.log(chalk.yellow.bold(`====================================================================================`));
@@ -72,7 +73,7 @@ const userPrompt = () => {
             }
         })
 };
-
+//view all employees
 const viewEmployees = () => {
     var sql = `SELECT employees.id, employees.first_name, employees.last_name, 
     role.title AS Title, departments.name AS Department, role.salary AS Salary, 
@@ -88,7 +89,7 @@ const viewEmployees = () => {
         console.table(results);
     })
 };
-
+//view all roles
 const viewRoles = () => {
     const sql = `SELECT role.id, role.title, role.salary, departments.name
     AS department_name 
@@ -102,13 +103,31 @@ const viewRoles = () => {
         console.table(results);
     })
 }
-
+//view all departments 
 const viewDeparts = () => {
-    var sql = `ELECT department.id AS id, department.name AS department FROM department`;
+    var sql = `SELECT department.id AS id, department.name AS department FROM department`;
     db.query(sql, (err, results) => {
         if (err) throw error;
         console.log(``);
         console.log(`Department List:`);
         console.table(results);
     })
+}
+
+const addEmployee = () => {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'What is the employees first name?',
+            validate: addFirstName => {
+                if (addFirstName) {
+                    return true;
+                } else {
+                    console.log('Please enter their first name');
+                    return false;
+                }
+            }
+        }
+    ])
 }
