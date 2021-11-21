@@ -1,0 +1,28 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jessangarcia/employee-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jessangarcia/employee-tracker/issues"
+  },
+  "homepage": "https://github.com/jessangarcia/employee-tracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "inquirer": "^8.1.2",
+    "jest": "^27.1.0",
+    "mysql2": "^2.3.0"
+  }
+}
