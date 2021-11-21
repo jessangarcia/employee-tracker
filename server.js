@@ -1,11 +1,9 @@
-const inquire = require('inquirer');
+const inquirer = require('inquirer');
 require('dotenv').config();
 const mysql = require('mysql2');
 const cTable = require('console.table')
 const chalk = require('chalk')
-const validate = require('./utils/inputValidate')
 const figlet = require('figlet');
-const inquirer = require('inquirer');
 
 //connect to database 
 // Connect to database
@@ -23,10 +21,11 @@ db.connect((error) => {
     if (error) throw error;
     console.log(chalk.yellow.bold(`====================================================================================`));
     console.log(``);
+    console.log(``);
     console.log(chalk.greenBright.bold(figlet.textSync('Employee Tracker')));
     console.log(``);
     console.log(``);
-    console.log(chalk.red.bold(`====================================================================================`));
+    console.log(chalk.yellow.bold(`====================================================================================`));
     userPrompt();
 });
 
@@ -40,9 +39,9 @@ const userPrompt = () => {
                 'View All Employees',
                 'View All Roles',
                 'View All Departments',
-                'Add Employee',
-                'Add Role',
                 'Add Department',
+                'Add Role',
+                'Add Employee',
                 'Update An Employee Role',
                 'Exit'
             ]
@@ -63,16 +62,16 @@ const userPrompt = () => {
                 viewDeparts();
             }
 
-            if (choices === 'Add Employee') {
-                addEmployee();
+            if (choices === 'Add Department') {
+                addDepart();
             }
 
             if (choices === 'Add Role') {
                 addRole();
             }
 
-            if (choices === 'Add Department') {
-                addDepart();
+            if (choices === 'Add Employee') {
+                addEmployee();
             }
 
             if (choices === 'Update An Employee Role') {
@@ -84,6 +83,9 @@ const userPrompt = () => {
             }
         });
 };
+
+// ----------------------------------------------------- VIEW -----------------------------------------------------------------------
+
 //view all employees
 const viewEmployees = () => {
     var sql = `SELECT employee.id, 
@@ -98,9 +100,11 @@ const viewEmployees = () => {
     ORDER BY employee.id ASC`;
     db.query(sql, (error, results) => {
         if (error) throw error;
-        console.log(``);
-        console.log(`Current Employees:`);
         console.table(results);
+        console.log(``);
+        console.log(chalk.yellowBright(`^Current Employees^`));
+        console.log(``);
+        userPrompt();
     });
 };
 //view all roles
@@ -110,9 +114,11 @@ const viewRoles = () => {
     INNER JOIN department ON roles.department_id = department.id`;
     db.query(sql, (error, results) => {
         if (error) throw error;
-        console.log(``);
-        console.log(`Current Roles:`);
         console.table(results);
+        console.log(``);
+        console.log(chalk.yellowBright(`^Current Roles^`));
+        console.log(``);
+        userPrompt();
     });
 };
 //view all departments 
@@ -120,11 +126,15 @@ const viewDeparts = () => {
     var sql = `SELECT department.id AS id, department.department_name AS department FROM department`;
     db.query(sql, (error, results) => {
         if (error) throw error;
-        console.log(``);
-        console.log(`Department List:`);
         console.table(results);
+        console.log(``);
+        console.log(chalk.yellowBright(`^Department List^`));
+        console.log(``);
+        userPrompt();
     });
 };
+
+// --------------------------------------------------- ADD --------------------------------------------------------------------
 
 //add department
 const addDepart = () => {
@@ -145,7 +155,7 @@ const addDepart = () => {
     ])
         .then((answer) => {
             var depart = `INSERT INTO department (department_name) VALUES (?)`;
-            db.query(depart, answer.newDepart, (error, response) => {
+            db.query(depart, answer.newDepart, (error) => {
                 if (error) throw error;
                 console.log(``);
                 console.log(chalk.greenBright(answer.newDepart + ` Department created!`));
@@ -203,7 +213,9 @@ const addRole = () => {
 
                     db.query(sql, newRoles, (error) => {
                         if (error) throw error;
+                        console.log(``);
                         console.log(chalk.greenBright(`Role created!`));
+                        console.log(``);
                         viewRoles();
                     })
                 })
@@ -275,7 +287,9 @@ const addEmployee = () => {
                                     const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
                                     db.query(sql, newEmp, (error) => {
                                         if (error) throw error;
+                                        console.log(``);
                                         console.log(chalk.greenBright(`Employee has been added!`));
+                                        console.log(``);
                                         viewEmployees();
                                     });
                                 });
@@ -284,3 +298,35 @@ const addEmployee = () => {
             });
         });
 };
+
+// ------------------------------------------------- UPDATE -------------------------------------------------------------------------
+
+//update employee role 
+const updateEmpRole = () => {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'employeeId',
+            message: 'Enter ID of the employee you want to update'
+        },
+        {
+            type: 'input',
+            name: 'newRoleId',
+            message: "Enter ID of the employee's new role"
+        }
+    ])
+        .then((answer) => {
+            const empId = answer.employeeId;
+            const updatedRole = answer.newRoleId;
+
+            //update tables 
+            const sql = `UPDATE employee SET role_id = "${updatedRole}" WHERE id = "${empId}"`;
+            db.query(sql, (error) => {
+                if (error) throw error;
+                console.log(``);
+                console.log(chalk.greenBright(`Employee Role Updated`));
+                console.log(``);
+                viewEmployees();
+            })
+        })
+}
